@@ -8,6 +8,7 @@ namespace Calculadora.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
+
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
@@ -23,7 +24,7 @@ namespace Calculadora.Controllers
         }
 
         [HttpPost] // só quando o fomulario for submetido em 'post' ele será acionado
-        public IActionResult Index(string botao, string visor)
+        public IActionResult Index(string botao, string visor, string primeiroOperando, string operador, string limpaEcra)
         {
 
             //testar valor do botao
@@ -40,7 +41,7 @@ namespace Calculadora.Controllers
                 case "9":
                 case "0":
                     //pressionei um algarismo
-                    if(visor == "0")
+                    if(limpaEcra == "sim"  || visor == "0")
                     {
                         visor = botao;
                     }
@@ -48,6 +49,7 @@ namespace Calculadora.Controllers
                     {
                         visor = visor + botao;
                     }
+                    limpaEcra = "nao";
                     //desafio : fazer em modo algebrico esta operação...
                     break;
                 
@@ -60,14 +62,55 @@ namespace Calculadora.Controllers
                     // vamos inverter o valor do 'visor'
                     if (visor.StartsWith('-')) visor = visor[1..];
                     else visor = '-' + visor;
-
-
-                    // sugestão: fazer d forma algebrica
+                    // sugestão: fazer de forma algebrica
                     break;
-            }
+
+                case "+":
+                case "-":
+                case "x":
+                case ":":
+                    // foi pressionado um operador
+                    if (string.IsNullOrEmpty(operador))
+                    {
+                        // como ja é pelo menos a segunda vez que pressionamos um operador
+                        // agora temos mesmo de fazer a operaçao algebrica
+                        double operandoUm = Convert.ToDouble(primeiroOperando);
+                        double operandoDois = Convert.ToDouble(visor);
+
+                        // var. auxiliar
+                        double resultado = 0;
+
+                        switch (operador)
+                        {
+                            case "+":
+                                resultado = operandoUm + operandoDois;
+                                break;
+                            case "-":
+                                resultado = operandoUm - operandoDois;
+                                break;
+                            case "x":
+                                resultado = operandoUm * operandoDois;
+                                break;
+                            case ":":
+                                resultado = operandoUm / operandoDois;
+                                break;
+
+                        }
+
+                        visor = resultado + "";
+                    }
+                        primeiroOperando = visor;
+                        operador = botao;
+                        limpaEcra = "sim";
+                      
+                    break;
+            
 
             // preparar dados para serem enviados à View
             ViewBag.Visor = visor;
+            ViewBag.PrimeiroOperando = primeiroOperando;
+            ViewBag.Operador = operador;
+            ViewBag.LimpaEcra = limpaEcra;
 
 
             return View();
